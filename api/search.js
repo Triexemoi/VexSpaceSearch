@@ -1,31 +1,23 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  const { q } = req.query;
-
+  const q = req.query.q;
   if (!q) {
     return res.status(400).json({ error: "Missing query" });
   }
 
   try {
-    const response = await openai.responses.create({
-      model: "gpt-4.1",
-      tools: [{ type: "web_search_preview" }],
-      input: `Tìm kiếm và liệt kê kết quả web về: ${q}.
-              Trả về dạng:
-              Title:
-              Link:
-              Description:
-              ---`
+    const apiKey = process.env.RAPIDAPI_KEY;
+
+    const response = await fetch(`https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/WebSearchAPI?q=${encodeURIComponent(q)}&pageNumber=1&pageSize=10&autoCorrect=true`, {
+      headers: {
+        "X-RapidAPI-Key": apiKey,
+        "X-RapidAPI-Host": "contextualwebsearch-websearch-v1.p.rapidapi.com"
+      }
     });
 
-    res.status(200).json({
-      result: response.output_text
-    });
+    const data = await response.json();
+    res.status(200).json(data);
 
   } catch (err) {
     res.status(500).json({ error: err.message });
